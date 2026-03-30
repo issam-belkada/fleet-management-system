@@ -16,7 +16,7 @@ return new class extends Migration {
                   ->constrained('vehicules')
                   ->restrictOnDelete();
             $table->foreignId('cree_par')
-                  ->constrained('utilisateurs')
+                  ->constrained('users')
                   ->restrictOnDelete();
             $table->string('nom', 150);
             $table->text('description')->nullable();
