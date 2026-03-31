@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\User;
 
 class Mission extends Model
 {
@@ -49,7 +50,7 @@ class Mission extends Model
 
     public function createur(): BelongsTo
     {
-        return $this->belongsTo(Utilisateur::class, 'cree_par');
+        return $this->belongsTo(User::class, 'cree_par');
     }
 
     // Positions enregistrées pendant cette mission
@@ -78,7 +79,7 @@ class Mission extends Model
         return $d <= $this->zone_rayon_m;
     }
 
-    private function haversine(float $lat1, float $lng1,
+    public function haversine(float $lat1, float $lng1,
                                 float $lat2, float $lng2): float
     {
         $R = 6371000;

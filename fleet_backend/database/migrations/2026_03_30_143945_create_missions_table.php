@@ -22,7 +22,7 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->enum('statut', ['en_attente', 'active', 'cloturee'])
                   ->default('en_attente');
-            $table->enum('phase', ['en_route', 'on_site'])
+            $table->enum('phase', ['en_route', 'on_site','en_retour'])
                   ->default('en_route');
             $table->decimal('zone_lat', 10, 7)
                   ->comment('Latitude du centre du cercle d\'arrivée');
