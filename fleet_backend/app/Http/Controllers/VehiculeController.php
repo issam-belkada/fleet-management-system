@@ -46,6 +46,19 @@ class VehiculeController extends Controller
         return response()->json($vehicules);
     }
 
+
+
+    public function disponibles(): JsonResponse
+        {
+            // On récupère les véhicules qui n'ont pas de chauffeur
+            // ET qui ne sont pas en maintenance
+            $vehicules = Vehicule::where('statut', 'non_assignee')
+                ->orderBy('immatriculation', 'asc')
+                ->get(['id', 'immatriculation', 'marque', 'modele']); // On ne prend que le nécessaire
+
+            return response()->json($vehicules);
+        }
+
     // -------------------------------------------------------
     // POST /api/vehicules
     // Create a new vehicule

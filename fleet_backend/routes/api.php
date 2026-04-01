@@ -14,6 +14,7 @@ Route::post('/login', [App\Http\Controllers\AuthController::class, 'login'])->na
 Route::middleware('auth:sanctum')->group(function () {
     // Ajoute ici les routes protégées par authentification
     Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+    Route::get('/vehicules/disponibles', [VehiculeController::class, 'disponibles']);
     Route::get('/vehicules',[VehiculeController::class, 'index']);
     Route::post('/vehicules',[VehiculeController::class, 'store']);
     Route::get('/vehicules/{vehicule}',[VehiculeController::class, 'show']);
