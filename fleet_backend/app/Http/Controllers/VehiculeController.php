@@ -20,7 +20,7 @@ class VehiculeController extends Controller
         // Start a query on the Vehicule model
         $query = Vehicule::query();
 
-        
+
         // search by immatriculation OR marque
         if ($request->filled('search')) {
             $search = $request->search;
@@ -30,7 +30,7 @@ class VehiculeController extends Controller
             });
         }
 
-        
+
         // filter by statut (assignee / non_assignee / en_maintenance)
         if ($request->filled('statut')) {
             $query->where('statut', $request->statut);
@@ -52,29 +52,24 @@ class VehiculeController extends Controller
     // Used by : page 4 modal "Ajouter une voiture"
     // -------------------------------------------------------
     public function store(Request $request): JsonResponse
-    {
-        // Validate the incoming data
-        $validated = $request->validate([
-            'immatriculation'  => 'required|string|max:20|unique:vehicules,immatriculation',
-            'marque'           => 'required|string|max:50',
-            'modele'           => 'required|string|max:50',
-            'couleur'          => 'required|string|max:30',
-            'statut'           => 'required|in:non_assignee,en_maintenance',
-            // zones_autorisees must be an array of existing zone IDs
-            'zones_autorisees' => 'required|array',
-            'zones_autorisees.*' => 'exists:zones_wilayas,id',
-        ]);
+        {
+            $validated = $request->validate([
+                'immatriculation'  => 'required|string|max:20|unique:vehicules,immatriculation',
+                'marque'           => 'required|string|max:50',
+                'modele'           => 'required|string|max:50',
+                'couleur'          => 'required|string|max:30',
+            ]);
 
-        // Create the vehicule in the database
-        $vehicule = Vehicule::create($validated);
+            // On force les zones 1, 2, 3, 4 par défaut
+            $validated['zones_autorisees'] = [1, 2, 3, 4];
 
-        // Return the created vehicule with 201 status
-        return response()->json([
-            'message'  => 'Véhicule créé avec succès.',
-            'vehicule' => $vehicule,
-        ], 201);
-    }
+            $vehicule = Vehicule::create($validated);
 
+            return response()->json([
+                'message'  => 'Véhicule créé avec succès.',
+                'vehicule' => $vehicule,
+            ], 201);
+        }
     // -------------------------------------------------------
     // GET /api/vehicules/{id}
     // Return one vehicule with all its details
