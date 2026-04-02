@@ -6,6 +6,7 @@ use App\Http\Controllers\MissionController;
 use App\Http\Controllers\VehiculeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\DashboardController;
 
 
 Route::post('/login', [App\Http\Controllers\AuthController::class, 'login'])->name('login');
@@ -38,5 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/alertes',[AlerteController::class, 'index']);
     Route::get('/alertes/{alerte}',[AlerteController::class, 'show']);
     Route::put('/alertes/{alerte}',[AlerteController::class, 'update']);
+
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
 });
