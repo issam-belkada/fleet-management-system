@@ -7,6 +7,7 @@ import Login from "../pages/auth/Login";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import Vehicules from "../pages/admin/vehicules/Vehicules";
 import Conducteurs from "../pages/admin/chauffeurs/Conducteurs.jsx";
+import Alertes from "../pages/admin/alertes/Alertes.jsx";
 
 const router = createBrowserRouter([
   {
@@ -25,7 +26,9 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="/admin/dashboard" replace /> },
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "vehicules", element: <Vehicules /> },
-      { path: "conducteurs", element: <Conducteurs /> }
+      { path: "conducteurs", element: <Conducteurs /> },
+      { path: "alertes", element: <Alertes /> }
+      
     ],
   },
 ])
