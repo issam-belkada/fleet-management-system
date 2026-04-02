@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class MissionController extends Controller
 {
@@ -49,7 +50,7 @@ class MissionController extends Controller
     // 1. Validation : on s'assure que la date de fin est présente et après le début
     $request->validate([
         'date_debut' => 'required',
-        'date_fin'   => 'required|after:date_debut', 
+        'date_fin'   => 'required', 
     ]);
 
     try {
@@ -135,36 +136,54 @@ class MissionController extends Controller
         return response()->json($mission);
     }
 
-    /**
-     * Mise à jour du statut (Activation / Clôture)
-     */
-    public function update(Request $request, Mission $mission): JsonResponse
-    {
-        $validated = $request->validate([
-            'statut' => 'required|in:en_attente,active,cloturee',
-        ]);
 
-        if ($mission->statut === 'cloturee') {
-            return response()->json(['message' => 'Mission déjà clôturée.'], 422);
+        public function update(Request $request, $id)
+        {
+            $mission = Mission::findOrFail($id);
+        
+            // Sécurité : On ne peut modifier une mission que si elle est encore "en attente"
+            if ($mission->statut !== 'en_attente') {
+                return response()->json([
+                    'message' => 'Seules les missions en attente peuvent être modifiées.'
+                ], 403);
+            }
+        
+            $validator = Validator::make($request->all(), [
+                'nom' => 'required|string|max:255',
+                'conducteur_id' => 'required|exists:users,id',
+                'date_debut' => 'required|date|after_or_equal:now',
+                'date_fin' => 'required|date|after:date_debut',
+                'zone_lat' => 'required|numeric',
+                'zone_lng' => 'required|numeric',
+                'zone_rayon_m' => 'required|integer|min:100',
+                'wilaya_destination' => 'required|string',
+            ], [
+                'date_fin.after' => 'La date de fin doit être postérieure à la date de départ.',
+                'date_debut.after_or_equal' => 'La date de début ne peut pas être dans le passé.'
+            ]);
+        
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+        
+            // Mise à jour des données
+            $mission->update([
+                'nom' => $request->nom,
+                'conducteur_id' => $request->conducteur_id,
+                'date_debut' => $request->date_debut,
+                'date_fin' => $request->date_fin,
+                'zone_lat' => $request->zone_lat,
+                'zone_lng' => $request->zone_lng,
+                'zone_rayon_m' => $request->zone_rayon_m,
+                'wilaya_destination' => $request->wilaya_destination,
+                'description' => $request->description,
+            ]);
+        
+            return response()->json([
+                'message' => 'Mission mise à jour avec succès',
+                'data' => $mission->load('conducteur', 'vehicule')
+            ]);
         }
-
-        if ($validated['statut'] === 'active' && $mission->statut === 'en_attente') {
-            $mission->date_debut = now();
-        }
-
-        if ($validated['statut'] === 'cloturee') {
-            $mission->date_fin = now();
-            // Optionnel : On peut décider de libérer le véhicule ici
-            // $mission->vehicule()->update(['statut' => 'non_assignee']);
-        }
-
-        $mission->update(['statut' => $validated['statut']]);
-
-        return response()->json([
-            'message' => 'Statut mis à jour.',
-            'mission' => $mission->load(['conducteur', 'vehicule'])
-        ]);
-    }
 
     /**
      * Supprimer une mission (si en attente uniquement)
