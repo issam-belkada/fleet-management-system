@@ -45,39 +45,49 @@ class MissionController extends Controller
      * Récupérer les conducteurs éligibles pour une période donnée
      */
     public function disponibles(Request $request): JsonResponse
-    {
-        $request->validate([
-            'date_debut' => 'required', // On accepte le format ISO du JS
-        ]);
+{
+    // 1. Validation : on s'assure que la date de fin est présente et après le début
+    $request->validate([
+        'date_debut' => 'required',
+        'date_fin'   => 'required|after:date_debut', 
+    ]);
 
-        try {
-            // Nettoyage de la date pour SQL (ex: 2026-04-02 07:31:00)
-            $debut = Carbon::parse($request->date_debut)->format('Y-m-d H:i:s');
-            $fin = Carbon::parse($debut)->addHours(24)->format('Y-m-d H:i:s');
+    try {
+        // 2. Nettoyage des dates avec Carbon pour le format SQL
+        $debut = Carbon::parse($request->date_debut)->format('Y-m-d H:i:s');
+        $fin = Carbon::parse($request->date_fin)->format('Y-m-d H:i:s');
 
-            $conducteurs = Conducteur::query()
-                ->whereNotNull('vehicule_id')
-                ->whereHas('vehicule', function ($q) {
-                    $q->where('statut', '!=', 'en_maintenance');
+        $conducteurs = Conducteur::query()
+            ->whereNotNull('vehicule_id')
+            ->whereHas('vehicule', function ($q) {
+                // Le véhicule doit être opérationnel
+                $q->where('statut', '!=', 'en_maintenance');
+            })
+            ->whereDoesntHave('missions', function ($q) use ($debut, $fin) {
+                // On cherche s'il existe une mission qui chevauche le créneau [début, fin]
+                $q->where(function ($query) use ($debut, $fin) {
+                    $query->whereBetween('date_debut', [$debut, $fin])
+                          ->orWhereBetween('date_fin', [$debut, $fin])
+                          ->orWhere(function ($sub) use ($debut, $fin) {
+                              $sub->where('date_debut', '<=', $debut)
+                                  ->where('date_fin', '>=', $fin);
+                          });
                 })
-                ->whereDoesntHave('missions', function ($q) use ($debut, $fin) {
-                    $q->where(function ($query) use ($debut, $fin) {
-                        $query->whereBetween('date_debut', [$debut, $fin])
-                              ->orWhereBetween('date_fin', [$debut, $fin])
-                              ->orWhere(function ($sub) use ($debut, $fin) {
-                                  $sub->where('date_debut', '<=', $debut)
-                                      ->where('date_fin', '>=', $fin);
-                              });
-                    })->where('statut', '!=', 'cloturee');
-                })
-                ->with('vehicule:id,immatriculation,marque,modele')
-                ->get();
+                // On ne compte pas les missions déjà terminées
+                ->where('statut', '!=', 'cloturee');
+            })
+            ->with('vehicule:id,immatriculation,marque,modele')
+            ->get();
 
-            return response()->json($conducteurs);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Erreur format date', 'error' => $e->getMessage()], 500);
-        }
+        return response()->json($conducteurs);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'message' => 'Erreur lors de la vérification des disponibilités',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     public function store(Request $request): JsonResponse
     {
@@ -90,6 +100,7 @@ class MissionController extends Controller
             'zone_rayon_m'       => 'required|integer|min:100',
             'wilaya_destination' => 'required|string|max:100',
             'date_debut'         => 'required|date',
+            'date_fin'           => 'required|date|after:date_debut'
         ]);
 
         $conducteur = Conducteur::with('vehicule')->findOrFail($validated['conducteur_id']);
