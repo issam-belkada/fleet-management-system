@@ -162,8 +162,8 @@ export default function Conducteurs() {
         )}
       </div>
 
-      <AddConducteurModal 
-        isOpen={isModalOpen} 
+      <AddConducteurModal
+        isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setSelectedConducteur(null); }} 
         onRefresh={() => fetchConducteurs(page)} 
         conducteur={selectedConducteur}

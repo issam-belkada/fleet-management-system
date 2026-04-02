@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/conducteurs/{conducteur}',[ConducteurController::class, 'update']);
     Route::delete('/conducteurs/{conducteur}',[ConducteurController::class, 'destroy']);
 
+    Route::get('/missions/disponibles', [MissionController::class, 'disponibles']);
     Route::get('/missions',[MissionController::class, 'index']);
     Route::post('/missions',[MissionController::class, 'store']);
     Route::get('/missions/{mission}',[MissionController::class, 'show']);
