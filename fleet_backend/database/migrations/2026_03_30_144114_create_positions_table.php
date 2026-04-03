@@ -21,7 +21,7 @@ return new class extends Migration {
             $table->unsignedSmallInteger('vitesse')
                   ->nullable()
                   ->comment('Vitesse en km/h');
-            $table->enum('phase', ['en_route', 'on_site'])
+            $table->enum('phase', ['en_route', 'on_site', 'en_retour'])
                   ->nullable()
                   ->comment('NULL si hors mission');
             $table->timestamp('created_at')

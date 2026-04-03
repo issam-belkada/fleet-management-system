@@ -46,6 +46,54 @@ class VehiculeController extends Controller
         return response()->json($vehicules);
     }
 
+    public function allForMap(): JsonResponse
+{
+    // On charge les relations nécessaires pour calculer l'état
+    $vehicules = Vehicule::with([
+        'conducteur',
+        'missionActive',
+        'alertes' => function($query) {
+            $query->nonAcquittees(); // Utilise ton scope défini dans Alerte.php
+        }
+    ])->get([
+        'id', 'immatriculation', 'marque', 'modele', 'statut', 'last_lat', 'last_lng'
+    ]);
+
+    // On transforme la collection pour ajouter les informations de statut dynamique
+    $data = $vehicules->map(function ($v) {
+        // Détermination de l'état prioritaire pour la couleur
+        $etatMap = 'libre'; // Par défaut (Vert)
+
+        if ($v->alertes->isNotEmpty()) {
+            $etatMap = 'alerte'; // Priorité maximale (Rouge)
+        } elseif ($v->missionActive) {
+            $etatMap = 'en_mission'; // (Bleu)
+        }
+
+        return [
+            'id' => $v->id,
+            'immatriculation' => $v->immatriculation,
+            'marque' => $v->marque,
+            'modele' => $v->modele,
+            'lat' => $v->last_lat,
+            'lng' => $v->last_lng,
+            'etat_map' => $etatMap, // 'alerte', 'en_mission', ou 'libre'
+            'conducteur' => $v->conducteur ? [
+                'nom' => $v->conducteur->nom,
+                'prenom' => $v->conducteur->prenom,
+                'telephone' => $v->conducteur->telephone,
+            ] : null,
+            'mission_details' => $v->missionActive ? [
+                'type' => $v->missionActive->type_mission,
+                'destination' => $v->missionActive->destination,
+            ] : null,
+            'nombre_alertes' => $v->alertes->count(),
+        ];
+    });
+
+    return response()->json($data);
+}
+
 
 
     public function disponibles(): JsonResponse

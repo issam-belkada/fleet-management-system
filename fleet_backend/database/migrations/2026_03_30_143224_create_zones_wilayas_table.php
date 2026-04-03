@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->string('nom', 100);
             $table->unsignedTinyInteger('code_wilaya')->unique();
-            $table->json('polygone');
+            $table->longText('polygone');
             $table->timestamp('created_at')->nullable();
         });
     }

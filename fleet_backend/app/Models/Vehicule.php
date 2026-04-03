@@ -17,6 +17,8 @@ class Vehicule extends Model
         'couleur',
         'statut',
         'zones_autorisees',
+        'last_lat',
+        'last_lng',
     ];
 
     protected function casts(): array

@@ -17,6 +17,11 @@ const Sidebar = () => {
       icon: <LayoutDashboard size={22} />, 
       label: "Tableau de bord" 
     },
+    {
+      path: "/admin/carte",
+      icon: <MapIcon size={22} />,
+      label: "Carte"
+    },
     { 
       path: "/admin/vehicules", 
       icon: <Truck size={22} />, 

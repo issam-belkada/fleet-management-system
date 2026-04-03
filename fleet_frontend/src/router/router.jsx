@@ -9,6 +9,7 @@ import Vehicules from "../pages/admin/vehicules/Vehicules";
 import Conducteurs from "../pages/admin/chauffeurs/Conducteurs.jsx";
 import Missions from "../pages/admin/missions/Missions.jsx";
 import Alertes from "../pages/admin/alertes/Alertes.jsx";
+import FleetMap from "../pages/admin/FleetMap.jsx";
 
 const router = createBrowserRouter([
   {
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/admin/dashboard" replace /> },
       { path: "dashboard", element: <AdminDashboard /> },
+      { path: "carte", element: <FleetMap /> },
       { path: "vehicules", element: <Vehicules /> },
       { path: "conducteurs", element: <Conducteurs /> },
       { path: "missions", element: <Missions /> },

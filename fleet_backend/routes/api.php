@@ -7,9 +7,12 @@ use App\Http\Controllers\VehiculeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Api\TrackingController;
 
 
 Route::post('/login', [App\Http\Controllers\AuthController::class, 'login'])->name('login');
+Route::post('/tracking', [TrackingController::class, 'store']);
+
 
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -21,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vehicules/{vehicule}',[VehiculeController::class, 'show']);
     Route::put('/vehicules/{vehicule}',[VehiculeController::class, 'update']);
     Route::delete('/vehicules/{vehicule}',[VehiculeController::class, 'destroy']);
+    Route::get('/vehicules-map', [VehiculeController::class, 'allForMap']);
 
     Route::get('/conducteurs',[ConducteurController::class, 'index']);
     Route::post('/conducteurs',[ConducteurController::class, 'store']);
@@ -42,5 +46,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/alertes/{alerte}',[AlerteController::class, 'update']);
 
     Route::get('/dashboard', [DashboardController::class, 'index']);
+
 
 });

@@ -17,6 +17,8 @@ return new class extends Migration {
                   ->default('non_assignee');
             $table->json('zones_autorisees')
                   ->comment('IDs de zones_wilayas ex: [1,2,3,4]');
+            $table->decimal('last_lat', 10, 7)->nullable();
+            $table->decimal('last_lng', 10, 7)->nullable();
             $table->timestamps();
         });
     }
