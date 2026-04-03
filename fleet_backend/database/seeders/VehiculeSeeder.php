@@ -16,7 +16,7 @@ class VehiculeSeeder extends Seeder
                 'modele' => 'Hilux',
                 'couleur' => 'Blanc',
                 'statut' => 'assignee',
-                'zones_autorisees' => json_encode([16, 42, 9]), // Alger, Tipaza, Blida
+                'zones_autorisees' => json_encode([1, 2, 3, 4]), // Alger, Tipaza, Blida
                 'last_lat' => 36.7538,
                 'last_lng' => 3.0588,
             ],
@@ -26,7 +26,7 @@ class VehiculeSeeder extends Seeder
                 'modele' => 'Duster',
                 'couleur' => 'Gris Cassiopée',
                 'statut' => 'assignee',
-                'zones_autorisees' => json_encode([31, 22, 13]), // Oran, SBA, Tlemcen
+                'zones_autorisees' => json_encode([1, 2, 3, 4]), // Oran, SBA, Tlemcen
                 'last_lat' => 35.6987,
                 'last_lng' => -0.6359,
             ],
@@ -37,7 +37,7 @@ class VehiculeSeeder extends Seeder
                 'couleur' => 'Blanc',
                 'statut' => 'en_mission', // Will map to 'assignee' in your enum or custom logic
                 'statut' => 'assignee',
-                'zones_autorisees' => json_encode([19, 25, 5]), // Setif, Constantine, Batna
+                'zones_autorisees' => json_encode([1, 2, 3, 4]), // Setif, Constantine, Batna
                 'last_lat' => 36.1898,
                 'last_lng' => 5.4108,
             ],
@@ -57,7 +57,7 @@ class VehiculeSeeder extends Seeder
                 'modele' => 'Partner',
                 'couleur' => 'Bleu',
                 'statut' => 'en_maintenance',
-                'zones_autorisees' => json_encode([16]),
+                'zones_autorisees' => json_encode([1, 2, 3, 4]),
                 'last_lat' => 36.7322,
                 'last_lng' => 3.0871,
             ],

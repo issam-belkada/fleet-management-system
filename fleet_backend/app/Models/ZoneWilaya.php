@@ -27,45 +27,54 @@ class ZoneWilaya extends Model
      * Note: Le GeoJSON stocke [lng, lat].
      */
     public function contientPoint(float $lat, float $lng): bool
-    {
-        $geometry = $this->polygone;
+{
+    $geometry = $this->polygone;
 
-        if (!$geometry || !isset($geometry['coordinates'])) {
-            return false;
-        }
-
-        // Comme c'est un MultiPolygon, on boucle sur chaque polygone
-        foreach ($geometry['coordinates'] as $polygon) {
-            // Dans un MultiPolygon, chaque polygone peut avoir des "trous" (rings)
-            // Le premier ring [0] est toujours la bordure extérieure
-            if ($this->pointDansPolygone($lat, $lng, $polygon[0])) {
-                return true;
-            }
-        }
-
+    if (!$geometry || !isset($geometry['coordinates'])) {
         return false;
     }
 
+    // Structure MultiPolygon : coordinates[PolygonIndex][RingIndex][PointIndex]
+    foreach ($geometry['coordinates'] as $polygon) {
+        if (!isset($polygon[0]) || !is_array($polygon[0])) continue;
+
+        // On teste le Ring extérieur (index 0)
+        if ($this->pointDansPolygone($lat, $lng, $polygon[0])) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
     private function pointDansPolygone(float $lat, float $lng, array $polygon): bool
-    {
-        $inside = false;
-        $n = count($polygon);
+{
+    $inside = false;
+    $n = count($polygon);
 
-        // Ray Casting Algorithm
-        for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
-            // $polygon[$i][0] = Longitude, $polygon[$i][1] = Latitude
-            $xi = $polygon[$i][0]; $yi = $polygon[$i][1];
-            $xj = $polygon[$j][0]; $yj = $polygon[$j][1];
-
-            // On compare $lng avec la Latitude (yi) et $lat avec la Longitude (xi)
-            $intersect = (($yi > $lat) != ($yj > $lat))
-                && ($lng < ($xj - $xi) * ($lat - $yi) / ($yj - $yi) + $xi);
-
-            if ($intersect) {
-                $inside = !$inside;
-            }
+    for ($i = 0, $j = $n - 1; $i < $n; $j = $i++) {
+        // VERIFICATION DE SECURITÉ : On s'assure que $polygon[$i] est bien un tableau
+        if (!is_array($polygon[$i]) || !is_array($polygon[$j])) {
+            continue;
         }
 
-        return $inside;
+        // GeoJSON stocke [longitude, latitude]
+        $xi = $polygon[$i][0]; // Longitude
+        $yi = $polygon[$i][1]; // Latitude
+
+        $xj = $polygon[$j][0]; // Longitude
+        $yj = $polygon[$j][1]; // Latitude
+
+        // Algorithme Ray Casting
+        // On vérifie si le point (lat, lng) intersecte le segment
+        $intersect = (($yi > $lat) != ($yj > $lat))
+            && ($lng < ($xj - $xi) * ($lat - $yi) / ($yj - $yi) + $xi);
+
+        if ($intersect) {
+            $inside = !$inside;
+        }
     }
+
+    return $inside;
+}
 }

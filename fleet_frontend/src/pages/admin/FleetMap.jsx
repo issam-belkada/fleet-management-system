@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from 'react-leaflet';
 import { Search, Info, ChevronRight, Navigation, Phone, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import L from 'leaflet';
+import 'leaflet.marker.slideto'; // <--- IMPORTANT: Import du plugin
 import { echo } from '../../api/echo.js';
 import axiosClient from '../../api/axios.js';
 
@@ -34,6 +35,80 @@ const createCustomIcon = (status) => {
         iconAnchor: [20, 20],
     });
 };
+
+// --- COMPOSANT MARQUEUR ANIMÉ ---
+// Ce composant gère la transition fluide entre deux points
+function AnimatedMarker({ vehicle }) {
+    const markerRef = useRef(null);
+    const position = [parseFloat(vehicle.lat), parseFloat(vehicle.lng)];
+
+    useEffect(() => {
+        if (markerRef.current) {
+            // .slideTo est fourni par leaflet-marker-slideto
+            // 2000ms correspond au 'sleep(2)' de ton seeder Laravel
+            markerRef.current.slideTo(position, {
+                duration: 2000,
+                keepAtCenter: false
+            });
+        }
+    }, [vehicle.lat, vehicle.lng]); // Se déclenche quand les coords changent
+
+    return (
+        <Marker 
+            ref={markerRef} 
+            position={position} 
+            icon={createCustomIcon(vehicle.etat_map)}
+        >
+            <Popup className="custom-popup" closeButton={false}>
+                {/* ... Ton contenu de Popup identique ... */}
+                <div className="w-72 bg-white rounded-3xl overflow-hidden shadow-2xl border-none">
+                    <div className="p-5 bg-slate-900 text-white">
+                        <div className="flex justify-between items-start">
+                            <h3 className="text-xl font-black tracking-tight">{vehicle.immatriculation}</h3>
+                            <StatusBadge status={vehicle.etat_map} inverted />
+                        </div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{vehicle.marque} • {vehicle.modele}</p>
+                    </div>
+                    
+                    <div className="p-6 space-y-5">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-slate-800 border border-slate-100">
+                                {vehicle.conducteur?.nom?.[0]}{vehicle.conducteur?.prenom?.[0] || '?'}
+                            </div>
+                            <div className="flex-1">
+                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-0.5">Chauffeur</p>
+                                <p className="text-sm font-black text-slate-800">
+                                    {vehicle.conducteur ? `${vehicle.conducteur.nom} ${vehicle.conducteur.prenom}` : 'Non assigné'}
+                                </p>
+                            </div>
+                            {vehicle.conducteur?.telephone && (
+                                <a href={`tel:${vehicle.conducteur.telephone}`} className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center hover:bg-green-100 transition-all">
+                                    <Phone size={18}/>
+                                </a>
+                            )}
+                        </div>
+
+                        {vehicle.mission_details && (
+                            <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Navigation size={14} className="text-blue-500 fill-blue-500/20"/>
+                                    <span className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em]">Mission Active</span>
+                                </div>
+                                <p className="text-xs font-bold text-slate-700 leading-relaxed">
+                                    {vehicle.mission_details.type} <span className="text-blue-400 mx-1">→</span> {vehicle.mission_details.destination}
+                                </p>
+                            </div>
+                        )}
+                        
+                        <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/10 active:scale-[0.98]">
+                            Voir le rapport détaillé <ChevronRight size={14}/>
+                        </button>
+                    </div>
+                </div>
+            </Popup>
+        </Marker>
+    );
+}
 
 // Composant pour recentrer la carte
 function RecenterMap({ position }) {
@@ -162,7 +237,7 @@ export default function FleetMap() {
                 </div>
             </div>
 
-            {/* Carte en plein écran (Couleurs OSM) */}
+            {/* Carte */}
             <div className="flex-1 relative">
                 <MapContainer 
                     center={[36.7538, 3.0588]} 
@@ -178,58 +253,7 @@ export default function FleetMap() {
                     <RecenterMap position={selectedPos} />
                     
                     {filteredVehicles.map(v => (
-                        <Marker 
-                            key={v.id} 
-                            position={[parseFloat(v.lat), parseFloat(v.lng)]} 
-                            icon={createCustomIcon(v.etat_map)}
-                        >
-                            <Popup className="custom-popup" closeButton={false}>
-                                <div className="w-72 bg-white rounded-3xl overflow-hidden shadow-2xl border-none">
-                                    <div className="p-5 bg-slate-900 text-white">
-                                        <div className="flex justify-between items-start">
-                                            <h3 className="text-xl font-black tracking-tight">{v.immatriculation}</h3>
-                                            <StatusBadge status={v.etat_map} inverted />
-                                        </div>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{v.marque} • {v.modele}</p>
-                                    </div>
-                                    
-                                    <div className="p-6 space-y-5">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center font-black text-slate-800 border border-slate-100">
-                                                {v.conducteur?.nom?.[0]}{v.conducteur?.prenom?.[0] || '?'}
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-0.5">Chauffeur</p>
-                                                <p className="text-sm font-black text-slate-800">
-                                                    {v.conducteur ? `${v.conducteur.nom} ${v.conducteur.prenom}` : 'Non assigné'}
-                                                </p>
-                                            </div>
-                                            {v.conducteur?.telephone && (
-                                                <a href={`tel:${v.conducteur.telephone}`} className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center hover:bg-green-100 transition-all">
-                                                    <Phone size={18}/>
-                                                </a>
-                                            )}
-                                        </div>
-
-                                        {v.mission_details && (
-                                            <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Navigation size={14} className="text-blue-500 fill-blue-500/20"/>
-                                                    <span className="text-[9px] font-black text-blue-600 uppercase tracking-[0.2em]">Mission Active</span>
-                                                </div>
-                                                <p className="text-xs font-bold text-slate-700 leading-relaxed">
-                                                    {v.mission_details.type} <span className="text-blue-400 mx-1">→</span> {v.mission_details.destination}
-                                                </p>
-                                            </div>
-                                        )}
-                                        
-                                        <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-blue-600 transition-all shadow-lg shadow-slate-900/10 active:scale-[0.98]">
-                                            Voir le rapport détaillé <ChevronRight size={14}/>
-                                        </button>
-                                    </div>
-                                </div>
-                            </Popup>
-                        </Marker>
+                        <AnimatedMarker key={v.id} vehicle={v} />
                     ))}
                 </MapContainer>
             </div>

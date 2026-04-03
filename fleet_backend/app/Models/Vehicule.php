@@ -61,11 +61,28 @@ class Vehicule extends Model
 
     // Vérifie si le véhicule est dans ses zones autorisées
     public function estDansZoneAutorisee(float $lat, float $lng): bool
-    {
-        $zones = ZoneWilaya::whereIn('id', $this->zones_autorisees)->get();
-        foreach ($zones as $zone) {
-            if ($zone->contientPoint($lat, $lng)) return true;
-        }
+{
+    $zonesAutorisees = $this->zones_autorisees;
+
+    // 1. Si c'est une chaîne JSON "[1,2,3,4]", on la décode en tableau PHP
+    if (is_string($zonesAutorisees)) {
+        $zonesAutorisees = json_decode($zonesAutorisees, true);
+    }
+
+    // 2. Sécurité : Si le décodage échoue ou si c'est vide
+    if (!is_array($zonesAutorisees) || empty($zonesAutorisees)) {
         return false;
     }
+
+    // 3. Récupérer les polygones par ID (puisque tu utilises les IDs 1, 2, 3, 4)
+    $zones = ZoneWilaya::whereIn('id', $zonesAutorisees)->get();
+
+    foreach ($zones as $zone) {
+        if ($zone->contientPoint($lat, $lng)) {
+            return true;
+        }
+    }
+
+    return false;
+}
 }

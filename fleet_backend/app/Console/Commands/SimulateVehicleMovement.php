@@ -32,9 +32,9 @@ class SimulateVehicleMovement extends Command
         $lat = (float) ($vehicule->last_lat ?: 36.7538);
         $lng = (float) ($vehicule->last_lng ?: 3.0588);
 
-        for ($i = 1; $i <= 30; $i++) {
+        for ($i = 1; $i <= 100; $i++) {
             // Simulation d'un déplacement réaliste
-            $lat += (rand(-5, 5) / 10000); 
+            $lat += (rand(-2, 5) / 10000);
             $lng += (rand(10, 30) / 10000); // Avance vers l'Est
 
             try {
@@ -64,7 +64,7 @@ class SimulateVehicleMovement extends Command
             }
 
             // Pause de 2 secondes entre chaque mouvement pour l'animation
-            sleep(2);
+            sleep(1.9);
         }
 
         $this->info("✅ Simulation terminée avec succès.");
