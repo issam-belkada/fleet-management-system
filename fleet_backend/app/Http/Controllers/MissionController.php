@@ -50,7 +50,7 @@ class MissionController extends Controller
     // 1. Validation : on s'assure que la date de fin est présente et après le début
     $request->validate([
         'date_debut' => 'required',
-        'date_fin'   => 'required', 
+        'date_fin'   => 'required',
     ]);
 
     try {
@@ -125,29 +125,27 @@ class MissionController extends Controller
     /**
      * Détails d'une mission
      */
-    public function show(Mission $mission): JsonResponse
-    {
-        $mission->load([
-            'conducteur',
-            'vehicule',
-            'positions' => fn($q) => $q->latest()->take(50),
-            'alertes' => fn($q) => $q->latest()
-        ]);
-        return response()->json($mission);
-    }
+    public function show(Mission $mission)
+        {
+            // On charge le véhicule, le conducteur, les positions du trajet et les alertes
+            return response()->json([
+                'mission' => $mission->load(['vehicule', 'conducteur', 'alertes']),
+                'positions' => $mission->positions()->orderBy('created_at', 'asc')->get()
+            ]);
+        }
 
 
         public function update(Request $request, $id)
         {
             $mission = Mission::findOrFail($id);
-        
+
             // Sécurité : On ne peut modifier une mission que si elle est encore "en attente"
             if ($mission->statut !== 'en_attente') {
                 return response()->json([
                     'message' => 'Seules les missions en attente peuvent être modifiées.'
                 ], 403);
             }
-        
+
             $validator = Validator::make($request->all(), [
                 'nom' => 'required|string|max:255',
                 'conducteur_id' => 'required|exists:users,id',
@@ -161,11 +159,11 @@ class MissionController extends Controller
                 'date_fin.after' => 'La date de fin doit être postérieure à la date de départ.',
                 'date_debut.after_or_equal' => 'La date de début ne peut pas être dans le passé.'
             ]);
-        
+
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
-        
+
             // Mise à jour des données
             $mission->update([
                 'nom' => $request->nom,
@@ -178,7 +176,7 @@ class MissionController extends Controller
                 'wilaya_destination' => $request->wilaya_destination,
                 'description' => $request->description,
             ]);
-        
+
             return response()->json([
                 'message' => 'Mission mise à jour avec succès',
                 'data' => $mission->load('conducteur', 'vehicule')

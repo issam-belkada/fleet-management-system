@@ -100,34 +100,29 @@ class ConducteurController extends Controller
     // Return one conducteur with his vehicule + missions + stats
     // Used by : page 7 (détail chauffeur)
     // -------------------------------------------------------
-    public function show(Conducteur $conducteur): JsonResponse
+    public function show(Conducteur $conducteur)
     {
-        // Load the vehicule and the last 10 missions
+        // 1. Eager Loading des relations nécessaires
         $conducteur->load([
-            'vehicule',
-            'missions' => function ($query) {
-                $query->latest()->take(10);
+            'vehicule.alertes' => function($query) {
+                $query->orderBy('created_at', 'desc');
             },
+            'missions' => function($query) {
+                $query->orderBy('created_at', 'desc');
+            }
         ]);
 
-        // Calculate stats for the stat cards on page 7
-        $stats = [
-            // Total number of missions ever assigned to this conducteur
-            'total_missions'     => $conducteur->missions()->count(),
-
-            // Number of completed missions
-            'missions_cloturees' => $conducteur->missions()
-                                               ->where('statut', 'cloturee')
-                                               ->count(),
-
-            // Is he currently on a mission ?
-            'en_mission'         => $conducteur->missionActive()->exists(),
+        // 2. Ajout des statistiques calculées
+        // On utilise les collections déjà chargées pour éviter de refaire des requêtes SQL
+        $conducteur->stats = [
+            'total_missions'         => $conducteur->missions->count(),
+            'total_alertes'          => $conducteur->vehicule ? $conducteur->vehicule->alertes->count() : 0,
+            'missions_cloturees'     => $conducteur->missions->where('statut', 'cloturee')->count(),
+            'alertes_non_acquittees' => $conducteur->vehicule ? $conducteur->vehicule->alertes->where('acquittee', false)->count() : 0,
+            'en_mission'             => $conducteur->missionActive()->exists()
         ];
 
-        return response()->json([
-            'conducteur' => $conducteur,
-            'stats'      => $stats,
-        ]);
+        return response()->json($conducteur);
     }
 
     // -------------------------------------------------------

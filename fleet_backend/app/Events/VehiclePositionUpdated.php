@@ -32,11 +32,16 @@ class VehiclePositionUpdated implements ShouldBroadcastNow
      * Pour une flotte, un canal public "fleet-tracking" est idéal pour commencer.
      */
     public function broadcastOn(): array
-    {
-        return [
-            new Channel('fleet-tracking'),
-        ];
+{
+    $channels = [new Channel('fleet-tracking')]; // Pour la vue d'ensemble (Admin)
+
+    // Si le véhicule est en mission, on diffuse aussi sur le canal de la mission
+    if ($this->vehicule->missionActive) {
+        $channels[] = new Channel('mission.' . $this->vehicule->missionActive->id);
     }
+
+    return $channels;
+}
 
     /**
      * Nom de l'événement tel qu'il sera reçu par Laravel Echo dans React.

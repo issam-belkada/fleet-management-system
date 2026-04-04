@@ -7,6 +7,7 @@ use App\Models\Vehicule;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 class VehiculeController extends Controller
 {
@@ -136,27 +137,45 @@ class VehiculeController extends Controller
     // Return one vehicule with all its details
     // Used by : page 5 (détail voiture)
     // -------------------------------------------------------
-    public function show(Vehicule $vehicule): JsonResponse
-    {
-        // Load the conducteur and the active mission
-        // and the last 10 positions for the map
-        $vehicule->load([
-            'conducteur',
-            'missionActive',
-            'positions' => function ($query) {
-                // Only get the 10 most recent positions
-                $query->latest()->take(10);
-            },
-        ]);
+    public function show(Request $request, Vehicule $vehicule)
+{
+    $date = $request->query('date', Carbon::today()->toDateString());
 
-        // Count how many missions this vehicule has had
-        $totalMissions = $vehicule->missions()->count();
+    $vehicule->load(['conducteur', 'missions']);
 
-        return response()->json([
-            'vehicule'      => $vehicule,
-            'total_missions' => $totalMissions,
-        ]);
-    }
+    // 1. On récupère le champ 'vitesse' en plus
+    $positions = $vehicule->positions()
+        ->whereDate('created_at', $date)
+        ->orderBy('created_at', 'asc')
+        ->get(['latitude', 'longitude', 'vitesse', 'created_at']);
+
+    $alertes = $vehicule->alertes()
+        ->whereDate('created_at', $date)
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+    // 2. Calcul des statistiques de vitesse
+    $vitesseMax = $positions->max('vitesse') ?? 0;
+    $vitesseMoyenne = $positions->avg('vitesse') ?? 0;
+
+    $stats = [
+        'nb_missions' => $vehicule->missions->count(),
+        'nb_alertes_jour' => $alertes->count(),
+        'en_mouvement' => $vehicule->positions()->where('created_at', '>', now()->subMinutes(5))->exists(),
+        // Nouveaux champs
+        'vitesse_max' => round($vitesseMax, 1),
+        'vitesse_moyenne' => round($vitesseMoyenne, 1),
+        'derniere_vitesse' => $positions->last() ? $positions->last()->vitesse : 0
+    ];
+
+    return response()->json([
+        'vehicule' => $vehicule,
+        'positions' => $positions,
+        'alertes' => $alertes,
+        'stats' => $stats,
+        'date_filtree' => $date
+    ]);
+}
 
     // -------------------------------------------------------
     // PUT /api/vehicules/{id}

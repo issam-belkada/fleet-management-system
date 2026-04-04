@@ -9,3 +9,7 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 Broadcast::channel('fleet-tracking', function () {
     return true; // À sécuriser plus tard avec auth()->check()
 });
+
+Broadcast::channel('mission.{id}', function ($user, $id) {
+    return true;
+});

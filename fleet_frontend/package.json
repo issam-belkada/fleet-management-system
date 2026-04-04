@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "@tanstack/react-query": "^5.96.2",
     "axios": "^1.14.0",
     "leaflet": "^1.9.4",
     "leaflet.marker.slideto": "^0.3.0",

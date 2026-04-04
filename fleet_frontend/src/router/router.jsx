@@ -10,6 +10,9 @@ import Conducteurs from "../pages/admin/chauffeurs/Conducteurs.jsx";
 import Missions from "../pages/admin/missions/Missions.jsx";
 import Alertes from "../pages/admin/alertes/Alertes.jsx";
 import FleetMap from "../pages/admin/FleetMap.jsx";
+import ConducteurDetails from "../pages/admin/chauffeurs/ConducteurDetails.jsx";
+import VehiculeDetails from "../pages/admin/vehicules/VehiculeDetails.jsx";
+import MissionDetails from "../pages/admin/missions/MissionDetails.jsx";
 
 const router = createBrowserRouter([
   {
@@ -29,9 +32,11 @@ const router = createBrowserRouter([
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "carte", element: <FleetMap /> },
       { path: "vehicules", element: <Vehicules /> },
-      { path: "conducteurs", element: <Conducteurs /> },
+      { path: "vehicules/:id", element: <VehiculeDetails /> },
       { path: "missions", element: <Missions /> },
+      { path: "missions/:id", element: <MissionDetails /> },
       { path: "conducteurs", element: <Conducteurs /> },
+      { path: "conducteurs/:id", element: <ConducteurDetails /> },
       { path: "alertes", element: <Alertes /> }
       
     ],
