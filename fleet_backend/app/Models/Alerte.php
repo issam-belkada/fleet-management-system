@@ -59,4 +59,11 @@ class Alerte extends Model
     {
         return $query->where('type_alerte', $type);
     }
+
+    protected static function booted()
+    {
+        static::created(function ($alerte) {
+            event(new \App\Events\AlerteCreated($alerte));
+        });
+    }
 }

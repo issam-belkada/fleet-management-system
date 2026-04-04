@@ -41,8 +41,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/alertes/count',[AlerteController::class, 'count']);
     Route::put('/alertes/acquitter-toutes',[AlerteController::class, 'acquitterToutes']);
+    Route::patch('/alertes/{alerte}/acquitter', [AlerteController::class, 'acquitter']);
     Route::get('/alertes',[AlerteController::class, 'index']);
     Route::get('/alertes/{alerte}',[AlerteController::class, 'show']);
+    Route::get('alertes-non_acquittees',[AlerteController::class,'non_acquittees']);
     Route::put('/alertes/{alerte}',[AlerteController::class, 'update']);
 
     Route::get('/dashboard', [DashboardController::class, 'index']);

@@ -13,3 +13,7 @@ Broadcast::channel('fleet-tracking', function () {
 Broadcast::channel('mission.{id}', function ($user, $id) {
     return true;
 });
+
+Broadcast::channel('admin-notifications', function () {
+    return true;
+});

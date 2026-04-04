@@ -55,22 +55,23 @@ class AlerteController extends Controller
         ]);
     }
 
-    // -------------------------------------------------------
-    // GET /api/alertes/{id}
-    // Return one alerte with all details
-    // Used by : page 11 (détail alerte)
-    // -------------------------------------------------------
-    // AlerteController.php
-public function show($id) {
-    $alerte = Alerte::with(['mission', 'vehicule'])->findOrFail($id);
+public function show($id)
+{
+    $alerte = Alerte::with([
+        'mission',
+        'vehicule.conducteur'
+    ])->findOrFail($id);
+
     return response()->json($alerte);
 }
 
-    // -------------------------------------------------------
-    // PUT /api/alertes/{id}
-    // Acquit one alerte
-    // Used by : page 11 toggle button
-    // -------------------------------------------------------
+    public function non_acquittees(): JsonResponse
+    {
+        $alertes = Alerte::nonAcquittees()->with(['vehicule', 'mission'])->latest()->limit(10)->get();
+
+        return response()->json($alertes);
+    }
+
     public function update(Alerte $alerte): JsonResponse
     {
         // Use the acquitter() method we defined in the model
@@ -102,11 +103,17 @@ public function show($id) {
         ]);
     }
 
-    // -------------------------------------------------------
-    // GET /api/alertes/count
-    // Return only the count of non acquittees alertes
-    // Used by : navbar badge (polled every 30s)
-    // -------------------------------------------------------
+    
+    public function acquitter(Alerte $alerte): JsonResponse
+    {
+        $alerte->acquitter();
+
+        return response()->json([
+            'message' => 'Alerte acquittée avec succès.',
+            'alerte'  => $alerte,
+        ]);
+    }
+    
     public function count(): JsonResponse
     {
         $count = Alerte::nonAcquittees()->count();
