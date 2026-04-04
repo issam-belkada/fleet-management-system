@@ -35,7 +35,7 @@ class Conducteur extends Model
     public function missionActive(): HasOne
     {
         return $this->hasOne(Mission::class, 'conducteur_id')
-                    ->whereIn('statut', ['active', 'en_attente']);
+                    ->where('statut', 'active');
     }
 
     // Nom complet

@@ -60,16 +60,11 @@ class AlerteController extends Controller
     // Return one alerte with all details
     // Used by : page 11 (détail alerte)
     // -------------------------------------------------------
-    public function show(Alerte $alerte): JsonResponse
-    {
-        // Load vehicule, mission and conducteur
-        $alerte->load([
-            'vehicule',
-            'mission.conducteur',
-        ]);
-
-        return response()->json($alerte);
-    }
+    // AlerteController.php
+public function show($id) {
+    $alerte = Alerte::with(['mission', 'vehicule'])->findOrFail($id);
+    return response()->json($alerte);
+}
 
     // -------------------------------------------------------
     // PUT /api/alertes/{id}

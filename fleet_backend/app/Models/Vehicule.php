@@ -56,8 +56,9 @@ class Vehicule extends Model
     public function missionActive(): HasOne
     {
         return $this->hasOne(Mission::class, 'vehicule_id')
-                    ->whereIn('statut', ['active', 'en_attente']);
+                    ->where('statut', 'active');
     }
+
 
     // Vérifie si le véhicule est dans ses zones autorisées
     public function estDansZoneAutorisee(float $lat, float $lng): bool

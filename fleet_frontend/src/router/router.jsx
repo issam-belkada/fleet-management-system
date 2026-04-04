@@ -9,6 +9,7 @@ import Vehicules from "../pages/admin/vehicules/Vehicules";
 import Conducteurs from "../pages/admin/chauffeurs/Conducteurs.jsx";
 import Missions from "../pages/admin/missions/Missions.jsx";
 import Alertes from "../pages/admin/alertes/Alertes.jsx";
+import AlerteDetails from "../pages/admin/alertes/AlerteDetails.jsx";
 import FleetMap from "../pages/admin/FleetMap.jsx";
 import ConducteurDetails from "../pages/admin/chauffeurs/ConducteurDetails.jsx";
 import VehiculeDetails from "../pages/admin/vehicules/VehiculeDetails.jsx";
@@ -37,7 +38,8 @@ const router = createBrowserRouter([
       { path: "missions/:id", element: <MissionDetails /> },
       { path: "conducteurs", element: <Conducteurs /> },
       { path: "conducteurs/:id", element: <ConducteurDetails /> },
-      { path: "alertes", element: <Alertes /> }
+      { path: "alertes", element: <Alertes /> },
+      { path: "alertes/:id", element: <AlerteDetails />}
       
     ],
   },
