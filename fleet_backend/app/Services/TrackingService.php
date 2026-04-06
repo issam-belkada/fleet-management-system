@@ -129,36 +129,40 @@ class TrackingService
         return sqrt($dx * $dx + $dy * $dy) * 111000;
     }
 
-    /**
-     * Enregistre l'alerte en base de données si elle n'existe pas déjà (anti-spam).
-     */
-    private function declencherAlerte(Position $current, Mission $mission, string $type)
-    {
-        // Mapping vers tes types d'alertes en DB (Enum)
-        $typeEnum = match($type) {
-            'eloignement' => 'sortie_zone_mission',
-            'deviation'   => 'sortie_zone_mission',
-            'immobilité'  => 'sortie_zone_mission',
-            default       => 'sortie_zone_mission'
-        };
 
-        // On évite de créer plusieurs fois la même alerte en moins de 5 minutes
-        $existe = Alerte::where('mission_id', $mission->id)
-            ->where('type_alerte', $typeEnum)
-            ->where('message', 'like', "%$type%")
-            ->where('created_at', '>=', now()->subMinutes(5))
-            ->exists();
+        private function declencherAlerte(Position $current, Mission $mission, string $type)
+        {
+            $typeEnum = 'sortie_zone_mission';
+            $nouveauMessage = "Comportement anormal : " . ucfirst($type);
 
-        if (!$existe) {
-            Alerte::create([
-                'vehicule_id' => $current->vehicule_id,
-                'mission_id'  => $mission->id,
-                'type_alerte' => $typeEnum,
-                'latitude'    => $current->latitude,
-                'longitude'   => $current->longitude,
-                'message'     => "Comportement anormal détecté : " . ucfirst($type),
-                'acquittee'   => false
-            ]);
+            $alerteExistante = Alerte::where('mission_id', $mission->id)
+                ->where('type_alerte', $typeEnum)
+                ->where('acquittee', false)
+                ->latest()
+                ->first();
+
+
+            if (!$alerteExistante ||
+                $alerteExistante->created_at->diffInMinutes(now()) >= 30 ||
+                $alerteExistante->message !== $nouveauMessage) {
+
+                Alerte::create([
+                    'vehicule_id' => $current->vehicule_id,
+                    'mission_id'  => $mission->id,
+                    'type_alerte' => $typeEnum,
+                    'latitude'    => $current->latitude,
+                    'longitude'   => $current->longitude,
+                    'message'     => $nouveauMessage,
+                    'acquittee'   => false,
+                ]);
+
+            } else {
+                // 3. Sinon, on met à jour la position et le timestamp pour le temps réel
+                $alerteExistante->update([
+                    'latitude'   => $current->latitude,
+                    'longitude'  => $current->longitude,
+                    'updated_at' => now(),
+                ]);
+            }
         }
-    }
 }

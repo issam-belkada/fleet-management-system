@@ -21,6 +21,15 @@ class PositionObserver
         $vehicule = $position->vehicule;
         $now = now();
 
+        // --- NOUVEAU : VÉRIFICATION EXCES DE VITESSE ---
+        if ($position->vitesse > 120) {
+            $this->notifierAlerte(
+                $position,
+                'exces_vitesse',
+                "Vitesse détectée: {$position->vitesse} km/h"
+            );
+        }
+
         // 1. Détection de la zone permanente (Polygone)
         $estDansZonePermanente = $vehicule->estDansZoneAutorisee($position->latitude, $position->longitude);
 
@@ -93,10 +102,37 @@ class PositionObserver
     }
 
     private function notifierAlerte(Position $pos, string $type, string $msg)
-    {
-        Alerte::updateOrCreate(
-            ['vehicule_id' => $pos->vehicule_id, 'acquittee' => false, 'type_alerte' => $type],
-            ['latitude' => $pos->latitude, 'longitude' => $pos->longitude, 'message' => $msg]
-        );
+{
+    $alerteExistante = Alerte::where('vehicule_id', $pos->vehicule_id)
+        ->where('type_alerte', $type)
+        ->where('acquittee', false)
+        ->latest()
+        ->first();
+
+    if (!$alerteExistante || $alerteExistante->created_at->diffInMinutes(now()) >= 60) {
+
+        $missionId = Mission::where('vehicule_id', $pos->vehicule_id)
+            ->whereIn('statut', ['en_attente', 'active'])
+            ->value('id');
+
+        Alerte::create([
+            'vehicule_id' => $pos->vehicule_id,
+            'mission_id'  => $missionId,
+            'type_alerte' => $type,
+            'latitude'    => $pos->latitude,
+            'longitude'   => $pos->longitude,
+            'message'     => $msg,
+            'acquittee'   => false
+        ]);
+
+    } else {
+
+        $alerteExistante->update([
+            'latitude'   => $pos->latitude,
+            'longitude'  => $pos->longitude,
+            'message'    => $msg,
+            'updated_at' => now()
+        ]);
     }
+}
 }

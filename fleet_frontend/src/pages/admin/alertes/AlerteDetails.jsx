@@ -4,7 +4,8 @@ import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet';
 import { 
     AlertOctagon, ArrowLeft, MapPin, Gauge, 
     User, Truck, ShieldAlert, Construction, 
-    Calendar, Briefcase, Phone, CreditCard, CheckCircle2
+    Calendar, Briefcase, Phone, CreditCard, CheckCircle2,
+    MessageSquare // Ajout de l'icône message
 } from 'lucide-react';
 import L from 'leaflet';
 import axiosClient from '../../../api/axios.js';
@@ -58,7 +59,7 @@ export default function AlerteDetails() {
         try {
             await axiosClient.put(`/alertes/${id}/acquitter`);
             toast.success("Alerte acquittée avec succès");
-            fetchAlerte(); // Rafraîchir les données
+            fetchAlerte(); 
         } catch (err) {
             toast.error("Erreur lors de l'acquittement");
         } finally {
@@ -111,7 +112,7 @@ export default function AlerteDetails() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
-                {/* --- COLONNE GAUCHE (6 COLS) --- */}
+                {/* --- COLONNE GAUCHE --- */}
                 <div className="lg:col-span-6 space-y-6">
                     
                     {/* Alerte & Localisation */}
@@ -121,6 +122,18 @@ export default function AlerteDetails() {
                         <h2 className="text-2xl font-black mb-6 leading-tight uppercase">
                             {alerte.type_alerte.replace(/_/g, ' ')}
                         </h2>
+
+                        {/* --- AJOUT : MESSAGE DE L'ALERTE --- */}
+                        <div className="mb-8 p-5 bg-red-500/10 border border-red-500/20 rounded-2xl backdrop-blur-sm relative z-10">
+                            <div className="flex items-center gap-2 mb-2">
+                                <MessageSquare size={14} className="text-red-400" />
+                                <span className="text-[9px] font-black text-red-400 uppercase tracking-tighter">Message du Système</span>
+                            </div>
+                            <p className="text-lg font-bold text-white italic leading-snug">
+                                {alerte.message || "Aucun détail textuel fourni par le capteur."}
+                            </p>
+                        </div>
+                        {/* ---------------------------------- */}
                         
                         <div className="space-y-4 relative z-10">
                             <div className="flex items-start gap-4 bg-white/10 p-5 rounded-2xl border border-white/5 backdrop-blur-md">
@@ -221,22 +234,16 @@ export default function AlerteDetails() {
                         </MapContainer>
                     </div>
 
-                    {/* Info Acquittement */}
+                    {/* Info Acquittement & Vitesse */}
                     <div className="bg-white p-6 rounded-3xl border border-slate-100 flex items-center justify-between">
                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center italic font-serif">i</div>
+                            <div className="w-10 h-10 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center italic font-serif text-xs">i</div>
                             <p className="text-[10px] font-bold text-slate-400 leading-relaxed max-w-[250px]">
                                 {alerte.acquittee 
                                     ? `Acquittée le ${new Date(alerte.acquittee_le).toLocaleString()}` 
                                     : "En attente d'intervention de l'administrateur"}
                             </p>
                          </div>
-                         {alerte.type_alerte === 'exces_vitesse' && (
-                             <div className="text-right">
-                                 <p className="text-[10px] font-black text-red-500 uppercase italic mb-1 flex items-center gap-1"><Gauge size={12}/> Vitesse relevée</p>
-                                 <p className="text-xl font-black text-slate-800">85 <span className="text-xs text-slate-400">km/h</span></p>
-                             </div>
-                         )}
                     </div>
                 </div>
             </div>

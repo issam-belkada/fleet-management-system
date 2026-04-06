@@ -49,7 +49,7 @@ class SimulateVehicleMovement extends Command
                     'vehicule_id' => $vehicule->id,
                     'latitude'    => $lat,
                     'longitude'   => $lng,
-                    'vitesse'     => rand(40, 75),
+                    'vitesse'     => rand(100, 140),
                     'mission_id'  => $vehicule->missionActive?->id,
                 ]);
 

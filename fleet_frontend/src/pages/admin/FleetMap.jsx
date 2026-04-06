@@ -192,7 +192,7 @@ export default function FleetMap() {
                             />
                         </div>
                         <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
-                            {['Tous', 'Libre', 'Mission', 'Alerte'].map((s) => (
+                            {['Tous', 'Libre', 'en_mission', 'Alerte'].map((s) => (
                                 <button
                                     key={s}
                                     onClick={() => setFilterStatus(s)}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Loader2, Palette, Hash, ShieldCheck, Car } from 'lucide-react';
+import { X, Loader2, Palette, Hash, ShieldCheck, Car, Wrench } from 'lucide-react';
 import axiosClient from '../../../api/axios';
 
 export default function AddVehiculeModal({ isOpen, onClose, onRefresh, vehicule }) {
@@ -11,6 +11,7 @@ export default function AddVehiculeModal({ isOpen, onClose, onRefresh, vehicule 
     marque: '',
     modele: '',
     couleur: '',
+    en_maintenance: false, // Ajout du champ maintenance
   });
 
   // Remplit le formulaire si on édite un véhicule
@@ -21,9 +22,10 @@ export default function AddVehiculeModal({ isOpen, onClose, onRefresh, vehicule 
         marque: vehicule.marque,
         modele: vehicule.modele,
         couleur: vehicule.couleur,
+        en_maintenance: vehicule.statut === 'en_maintenance', // Initialise selon le statut actuel
       });
     } else {
-      setFormData({ immatriculation: '', marque: '', modele: '', couleur: '' });
+      setFormData({ immatriculation: '', marque: '', modele: '', couleur: '', en_maintenance: false });
     }
   }, [vehicule, isOpen]);
 
@@ -124,6 +126,25 @@ export default function AddVehiculeModal({ isOpen, onClose, onRefresh, vehicule 
               />
             </div>
           </div>
+
+          {/* CHECKBOX MAINTENANCE : Uniquement en mode modification */}
+          {vehicule && (
+            <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex items-center justify-between">
+              <div className="flex items-center gap-3 text-orange-700">
+                <Wrench size={18} />
+                <span className="text-xs font-bold uppercase tracking-wider">Mettre en maintenance</span>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer"
+                  checked={formData.en_maintenance}
+                  onChange={e => setFormData({...formData, en_maintenance: e.target.checked})}
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+              </label>
+            </div>
+          )}
 
           {!vehicule && (
             <div className="p-3.5 bg-blue-50 rounded-2xl flex items-start gap-3 border border-blue-100">

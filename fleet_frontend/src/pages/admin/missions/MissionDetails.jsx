@@ -75,6 +75,7 @@ export default function MissionDetails() {
 
     useEffect(() => {
         if (!data || data.mission.statut !== 'active') return;
+        console.log('data', data);
         const channel = echo.channel(`mission.${id}`)
             .listen('.position.updated', (e) => {
                 const newPos = {
@@ -82,6 +83,7 @@ export default function MissionDetails() {
                     longitude: parseFloat(e.lng),
                     created_at: e.updated_at
                 };
+                console.log('Received position update via Echo:',newPos);
                 setData(prev => ({ ...prev, positions: [...prev.positions, newPos] }));
                 console.log("Position mise à jour reçue via Echo:", newPos);
                 setMapFocus([newPos.latitude, newPos.longitude]);
