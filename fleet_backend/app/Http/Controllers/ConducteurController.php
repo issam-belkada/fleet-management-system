@@ -18,36 +18,34 @@ class ConducteurController extends Controller
     //           page 9 (mission form dropdown)
     // -------------------------------------------------------
     public function index(Request $request): JsonResponse
-    {
-        // Start a query on the Conducteur model
-        $query = Conducteur::query();
+{
+    $query = Conducteur::query();
 
-        // Search by nom OR prenom
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('nom', 'LIKE', "%{$search}%")
-                  ->orWhere('prenom', 'LIKE', "%{$search}%");
-            });
-        }
-
-        // If the frontend only wants available conducteurs
-        // (for the mission creation dropdown)
-        if ($request->filled('disponible') && $request->disponible == true) {
-            // Only return conducteurs with no active mission
-            $query->whereDoesntHave('missions', function ($q) {
-                $q->whereIn('statut', ['active', 'en_attente']);
-            });
-        }
-
-        // Always load the vehicule linked to each conducteur
-        $query->with('vehicule');
-
-        // Paginate the results
-        $conducteurs = $query->latest()->paginate(10);
-
-        return response()->json($conducteurs);
+    if ($request->filled('search')) {
+        $search = $request->input('search');
+        
+        // On utilise WHERE ... LIKE de manière case-insensitive (par défaut sur MySQL/PostgreSQL)
+        // L'isolation dans un callback function() est cruciale pour ne pas casser les autres filtres
+        $query->where(function ($q) use ($search) {
+            $q->where('nom', 'ILIKE', "%{$search}%")
+              ->orWhere('prenom', 'ILIKE', "%{$search}%")
+              ->orWhere('telephone', 'ILIKE', "%{$search}%"); // Optionnel: recherche par tel
+        });
     }
+
+    if ($request->boolean('disponible')) {
+        $query->whereDoesntHave('missions', function ($q) {
+            $q->whereIn('statut', ['active', 'en_attente']);
+        });
+    }
+
+    $query->with('vehicule');
+
+    // On utilise appends pour garder les paramètres de recherche dans les liens de pagination
+    $conducteurs = $query->latest()->paginate(10)->withQueryString();
+
+    return response()->json($conducteurs);
+}
 
     // -------------------------------------------------------
     // POST /api/conducteurs

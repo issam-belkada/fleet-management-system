@@ -81,7 +81,9 @@ export default function AdminLayout() {
   const getPageTitle = () => {
     const path = location.pathname;
     if (path.includes('dashboard')) return "Tableau de Bord";
+    if (path.includes('carte')) return "Carte de Flotte";
     if (path.includes('vehicules')) return "Gestion de la Flotte";
+    if (path.includes('conducteurs')) return "Gestion des Conducteurs";
     if (path.includes('missions')) return "Suivi des Missions";
     if (path.includes('alertes')) return "Journal des Alertes";
     return "Administration";

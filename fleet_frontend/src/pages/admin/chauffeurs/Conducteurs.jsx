@@ -17,11 +17,15 @@ export default function Conducteurs() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
-  const fetchConducteurs = useCallback(async (pageNumber = 1) => {
+  // Correction : fetchConducteurs utilise maintenant explicitement les paramètres passés
+  const fetchConducteurs = useCallback(async (pageNumber = 1, searchQuery = search) => {
     setLoading(true);
     try {
       const { data } = await axiosClient.get(`/conducteurs`, {
-        params: { page: pageNumber, search }
+        params: { 
+          page: pageNumber, 
+          search: searchQuery 
+        }
       });
       setConducteurs(data.data || []);
       setMeta(data);
@@ -44,10 +48,13 @@ export default function Conducteurs() {
     }
   };
 
+  // Correction : On force le retour à la page 1 lors d'une saisie dans la barre de recherche
   useEffect(() => {
-    const handler = setTimeout(() => fetchConducteurs(1), 300);
+    const handler = setTimeout(() => {
+      fetchConducteurs(1, search);
+    }, 300);
     return () => clearTimeout(handler);
-  }, [fetchConducteurs]);
+  }, [search, fetchConducteurs]);
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans">
@@ -62,7 +69,7 @@ export default function Conducteurs() {
             <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
             <input
               type="text"
-              placeholder="Rechercher un nom..."
+              placeholder="Rechercher un nom/tel..."
               className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none w-64 text-sm shadow-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}

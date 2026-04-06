@@ -90,13 +90,7 @@ const Sidebar = () => {
 
       {/* Footer Sidebar (Paramètres / Version) */}
       <div className="p-4 mt-auto border-t border-white/5">
-        <NavLink
-            to="/admin/settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-all"
-        >
-            <Settings size={20} />
-            <span className="text-sm font-medium">Paramètres</span>
-        </NavLink>
+      
         <div className="mt-4 px-4 py-3 bg-white/5 rounded-xl">
             <p className="text-[10px] text-slate-500 uppercase font-bold">Système v1.0.4</p>
             <p className="text-[10px] text-slate-600 mt-0.5">Dernière MAJ: Aujourd'hui</p>

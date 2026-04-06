@@ -4,7 +4,7 @@ import axiosClient from '../../../api/axios.js';
 import AddVehiculeModal from './AddVehiculeModal';
 import { 
   Truck, Search, Plus, Edit2, Trash2,
-  ChevronLeft, ChevronRight, Loader2, MapPin, Palette, Eye
+  ChevronLeft, ChevronRight, Loader2, Palette, Eye
 } from 'lucide-react';
 
 export default function Vehicules() {
@@ -12,17 +12,22 @@ export default function Vehicules() {
   const [vehicules, setVehicules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedVehicule, setSelectedVehicule] = useState(null); // Pour l'édition
+  const [selectedVehicule, setSelectedVehicule] = useState(null);
   const [meta, setMeta] = useState(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(1);
 
-  const fetchVehicules = useCallback(async (pageNumber = 1) => {
+  // Utilise les arguments passés (pageNumber, searchQuery, statusFilter)
+  const fetchVehicules = useCallback(async (pageNumber = 1, searchQuery = search, statusFilter = filter) => {
     setLoading(true);
     try {
       const { data } = await axiosClient.get(`/vehicules`, {
-        params: { page: pageNumber, search, statut: filter }
+        params: { 
+          page: pageNumber, 
+          search: searchQuery, 
+          statut: statusFilter 
+        }
       });
       setVehicules(data.data || []);
       setMeta(data);
@@ -50,10 +55,13 @@ export default function Vehicules() {
     setIsModalOpen(true);
   };
 
+  // Logique identique à Conducteurs : Force la page 1 lors d'une saisie
   useEffect(() => {
-    const handler = setTimeout(() => fetchVehicules(1), 300);
+    const handler = setTimeout(() => {
+      fetchVehicules(1, search, filter);
+    }, 300);
     return () => clearTimeout(handler);
-  }, [fetchVehicules]);
+  }, [search, filter, fetchVehicules]);
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans">
@@ -82,7 +90,7 @@ export default function Vehicules() {
           >
             <option value="">Tous les statuts</option>
             <option value="non_assignee">Disponible</option>
-            <option value="assignee">Assignee</option>
+            <option value="assignee">Assigné</option>
             <option value="en_maintenance">À l'Atelier</option>
           </select>
 
@@ -108,11 +116,7 @@ export default function Vehicules() {
           </thead>
           <tbody className="text-sm divide-y divide-slate-50">
             {loading ? (
-              <tr>
-                <td colSpan="5" className="py-24 text-center">
-                   <Loader2 className="animate-spin inline text-blue-600" size={32} />
-                </td>
-              </tr>
+              <tr><td colSpan="5" className="py-24 text-center"><Loader2 className="animate-spin inline text-blue-600" size={32} /></td></tr>
             ) : vehicules.map((v) => (
               <tr 
                 key={v.id} 
@@ -121,12 +125,8 @@ export default function Vehicules() {
               >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                      <Truck size={18} />
-                    </div>
-                    <span className="font-extrabold text-slate-800 uppercase tracking-tighter text-base">
-                      {v.immatriculation}
-                    </span>
+                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl"><Truck size={18} /></div>
+                    <span className="font-extrabold text-slate-800 uppercase tracking-tighter text-base">{v.immatriculation}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
@@ -136,44 +136,29 @@ export default function Vehicules() {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Palette size={14} className="text-slate-300" />
-                    <span className="text-xs font-semibold text-slate-600 capitalize">{v.couleur}</span>
-                  </div>
+                  <span className="text-xs font-semibold text-slate-600 capitalize">{v.couleur}</span>
                 </td>
                 <td className="px-6 py-4 text-center">
                   <StatusBadge status={v.statut} />
                 </td>
                 <td className="px-6 py-4 text-right pr-10">
                   <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => navigate(`/admin/vehicules/${v.id}`)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                      <Eye size={16} />
-                    </button>
-                    <button onClick={() => openEditModal(v)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
-                      <Edit2 size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(v.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
-                      <Trash2 size={16} />
-                    </button>
+                    <button onClick={() => navigate(`/admin/vehicules/${v.id}`)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl"><Eye size={16} /></button>
+                    <button onClick={() => openEditModal(v)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl"><Edit2 size={16} /></button>
+                    <button onClick={() => handleDelete(v.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl"><Trash2 size={16} /></button>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {/* Pagination inchangée */}
+        
         {meta && (
-          <div className="px-8 py-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-100">
-            <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">
-              {meta.from}-{meta.to} sur {meta.total}
-            </span>
+          <div className="px-8 py-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-100 text-xs text-slate-500 font-bold uppercase">
+            <span>{meta.from}-{meta.to} sur {meta.total}</span>
             <div className="flex gap-2">
-              <button disabled={page === 1} onClick={() => fetchVehicules(page - 1)} className="p-2 border border-slate-200 rounded-xl bg-white disabled:opacity-30">
-                <ChevronLeft size={18} />
-              </button>
-              <button disabled={page === meta.last_page} onClick={() => fetchVehicules(page + 1)} className="p-2 border border-slate-200 rounded-xl bg-white disabled:opacity-30">
-                <ChevronRight size={18} />
-              </button>
+              <button disabled={page === 1} onClick={() => fetchVehicules(page - 1)} className="p-2 border border-slate-200 rounded-xl bg-white disabled:opacity-30"><ChevronLeft size={18} /></button>
+              <button disabled={page === meta.last_page} onClick={() => fetchVehicules(page + 1)} className="p-2 border border-slate-200 rounded-xl bg-white disabled:opacity-30"><ChevronRight size={18} /></button>
             </div>
           </div>
         )}
@@ -183,7 +168,7 @@ export default function Vehicules() {
         isOpen={isModalOpen} 
         onClose={() => { setIsModalOpen(false); setSelectedVehicule(null); }} 
         onRefresh={() => fetchVehicules(page)} 
-        vehicule={selectedVehicule} // On passe le véhicule pour l'édition
+        vehicule={selectedVehicule} 
       />
     </div>
   );
@@ -191,9 +176,9 @@ export default function Vehicules() {
 
 const StatusBadge = ({ status }) => {
   const configs = {
-    non_assignee: { label: 'non_assignee', color: 'bg-emerald-100 text-emerald-700' },
-    assignee: { label: 'assignee', color: 'bg-slate-900 text-white' },
-    en_maintenance: { label: 'en_maintenance', color: 'bg-orange-100 text-orange-700' },
+    non_assignee: { label: 'disponible', color: 'bg-emerald-100 text-emerald-700' },
+    assignee: { label: 'assigné', color: 'bg-slate-900 text-white' },
+    en_maintenance: { label: 'à l\'atelier', color: 'bg-orange-100 text-orange-700' },
   };
   const config = configs[status] || { label: status, color: 'bg-slate-200 text-slate-600' };
   return (

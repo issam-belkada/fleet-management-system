@@ -17,35 +17,31 @@ class VehiculeController extends Controller
     // Used by : page 4 (liste vehicules) and mission form
     // -------------------------------------------------------
     public function index(Request $request): JsonResponse
-    {
-        // Start a query on the Vehicule model
-        $query = Vehicule::query();
+{
+    $query = Vehicule::query();
 
+    if ($request->filled('search')) {
+    $search = trim($request->search); // On enlève les espaces accidentels du début/fin
+    
+    $query->where(function ($q) use ($search) {
+        // On passe tout en minuscule pour ignorer la casse (Case-Insensitive)
+        $q->where('immatriculation', 'ILIKE', "%{$search}%")
+          ->orWhere('marque', 'ILIKE', "%{$search}%")
+          ->orWhere('modele', 'ILIKE', "%{$search}%"); // Ajoute aussi le modèle par sécurité
+    });
+}
 
-        // search by immatriculation OR marque
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('immatriculation', 'LIKE', "%{$search}%")
-                  ->orWhere('marque', 'LIKE', "%{$search}%");
-            });
-        }
-
-
-        // filter by statut (assignee / non_assignee / en_maintenance)
-        if ($request->filled('statut')) {
-            $query->where('statut', $request->statut);
-        }
-
-        // Load the conducteur linked to each vehicule
-        // so the frontend gets driver info in the same response
-        $query->with('conducteur');
-
-        // Return paginated results — 10 per page
-        $vehicules = $query->latest()->paginate(10);
-
-        return response()->json($vehicules);
+    if ($request->filled('statut')) {
+        $query->where('statut', $request->statut);
     }
+
+    $query->with('conducteur');
+
+    // On utilise withQueryString() pour persister les filtres dans la pagination
+    $vehicules = $query->latest()->paginate(10)->withQueryString();
+
+    return response()->json($vehicules);
+}
 
     public function allForMap(): JsonResponse
 {
