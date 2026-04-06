@@ -82,7 +82,7 @@ class TrackingService
         );
 
         // Seuil de tolérance : 10km (ajustable selon tes besoins)
-        return $distanceLigne > 10000;
+        return $distanceLigne > 50000;
     }
 
     /**

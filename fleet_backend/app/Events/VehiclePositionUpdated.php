@@ -64,7 +64,7 @@ class VehiclePositionUpdated implements ShouldBroadcastNow
             'modele'          => $this->vehicule->modele,
             'lat'             => (float) $this->vehicule->last_lat,
             'lng'             => (float) $this->vehicule->last_lng,
-            'statut'          => $this->vehicule->statut, // ex: 'disponible', 'en_mission'
+            'statut'          => $this->vehicule->statut,
             'conducteur'       => $this->vehicule->conducteur ? [
                 'nom'    => $this->vehicule->conducteur->nom,
                 'prenom' => $this->vehicule->conducteur->prenom,

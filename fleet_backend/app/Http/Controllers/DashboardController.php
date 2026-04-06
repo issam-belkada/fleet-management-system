@@ -9,17 +9,10 @@ use Illuminate\Http\JsonResponse;
 
 class DashboardController extends Controller
 {
-    // -------------------------------------------------------
-    // GET /api/dashboard
-    // Returns all data needed for the dashboard page
-    // Called once on page load + every 30s polling
-    // -------------------------------------------------------
+
     public function index(): JsonResponse
     {
-        // ────────────────────────────────────────
-        // VEHICULES STATS
-        // One query — group by statut
-        // ─────────────────────────────────────────
+
         $vehiculesParStatut = Vehicule::selectRaw('statut, COUNT(*) as total')
                                       ->groupBy('statut')
                                       ->pluck('total', 'statut');
@@ -98,9 +91,6 @@ class DashboardController extends Controller
                 ];
             });
 
-        // ─────────────────────────────────────────
-        // BUILD RESPONSE
-        // ─────────────────────────────────────────
         return response()->json([
             'vehicules'         => $vehiculesStats,
             'alertes'           => $alertesStats,

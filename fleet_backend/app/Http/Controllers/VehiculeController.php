@@ -140,32 +140,48 @@ class VehiculeController extends Controller
     public function show(Request $request, Vehicule $vehicule)
 {
     $date = $request->query('date', Carbon::today()->toDateString());
-
+    // On charge toutes les relations nécessaires
     $vehicule->load(['conducteur', 'missions']);
 
-    // 1. On récupère le champ 'vitesse' en plus
+    // 1. Positions (Logique existante)
     $positions = $vehicule->positions()
         ->whereDate('created_at', $date)
         ->orderBy('created_at', 'asc')
         ->get(['latitude', 'longitude', 'vitesse', 'created_at']);
 
+    $isHistorical = false;
+    if ($positions->isEmpty()) {
+        $lastKnown = $vehicule->positions()
+            ->orderBy('created_at', 'desc')
+            ->first(['latitude', 'longitude', 'vitesse', 'created_at']);
+        if ($lastKnown) {
+            $positions = collect([$lastKnown]);
+            $isHistorical = true;
+        }
+    }
+
+    // 2. ALERTES : Date sélectionnée OU Non acquittées
     $alertes = $vehicule->alertes()
-        ->whereDate('created_at', $date)
+        ->where(function($query) use ($date) {
+            $query->whereDate('created_at', $date)
+                  ->orWhere('acquittee', false); // Affiche le "reste à faire"
+        })
+        ->orderBy('acquittee', 'asc') // Les non-acquittées en premier
         ->orderBy('created_at', 'desc')
         ->get();
 
-    // 2. Calcul des statistiques de vitesse
+    // 3. Stats
     $vitesseMax = $positions->max('vitesse') ?? 0;
-    $vitesseMoyenne = $positions->avg('vitesse') ?? 0;
 
     $stats = [
         'nb_missions' => $vehicule->missions->count(),
-        'nb_alertes_jour' => $alertes->count(),
+        'nb_alertes_jour' => $alertes->whereBetween('created_at', [Carbon::parse($date)->startOfDay(), Carbon::parse($date)->endOfDay()])->count(),
+        'total_non_acquittees' => $vehicule->alertes()->where('acquittee', false)->count(), // Nouveau badge
         'en_mouvement' => $vehicule->positions()->where('created_at', '>', now()->subMinutes(5))->exists(),
-        // Nouveaux champs
         'vitesse_max' => round($vitesseMax, 1),
-        'vitesse_moyenne' => round($vitesseMoyenne, 1),
-        'derniere_vitesse' => $positions->last() ? $positions->last()->vitesse : 0
+        'vitesse_moyenne' => round($positions->avg('vitesse') ?? 0, 1),
+        'derniere_vitesse' => $positions->last() ? $positions->last()->vitesse : 0,
+        'is_historical' => $isHistorical
     ];
 
     return response()->json([

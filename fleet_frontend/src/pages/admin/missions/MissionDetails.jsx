@@ -30,6 +30,19 @@ const destinationIcon = L.divIcon({
     iconAnchor: [17, 17],
 });
 
+// NOUVEAU : Icône pour les alertes sur la carte
+const incidentIcon = L.divIcon({
+    className: 'incident-marker',
+    html: `<div class="relative flex items-center justify-center">
+            <div class="absolute w-8 h-8 bg-red-500 rounded-full animate-ping opacity-40"></div>
+            <div class="relative w-5 h-5 bg-red-600 border-2 border-white rounded-full shadow-lg flex items-center justify-center">
+                <span class="text-[10px] text-white font-black">!</span>
+            </div>
+           </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+});
+
 function MapController({ center }) {
     const map = useMap();
     useEffect(() => {
@@ -45,7 +58,6 @@ export default function MissionDetails() {
     const [mapFocus, setMapFocus] = useState(null);
     const [address, setAddress] = useState("Recherche de l'adresse...");
 
-    // Fonction pour récupérer l'adresse textuelle via Nominatim
     const fetchAddress = async (lat, lng) => {
         try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
@@ -60,7 +72,6 @@ export default function MissionDetails() {
         try {
             const response = await axiosClient.get(`/missions/${id}`);
             setData(response.data);
-            // On cherche l'adresse dès qu'on a les coordonnées de destination
             if (response.data.mission) {
                 fetchAddress(response.data.mission.zone_lat, response.data.mission.zone_lng);
             }
@@ -75,7 +86,6 @@ export default function MissionDetails() {
 
     useEffect(() => {
         if (!data || data.mission.statut !== 'active') return;
-        console.log('data', data);
         const channel = echo.channel(`mission.${id}`)
             .listen('.position.updated', (e) => {
                 const newPos = {
@@ -83,9 +93,7 @@ export default function MissionDetails() {
                     longitude: parseFloat(e.lng),
                     created_at: e.updated_at
                 };
-                console.log('Received position update via Echo:',newPos);
                 setData(prev => ({ ...prev, positions: [...prev.positions, newPos] }));
-                console.log("Position mise à jour reçue via Echo:", newPos);
                 setMapFocus([newPos.latitude, newPos.longitude]);
             });
         return () => echo.leaveChannel(`mission.${id}`);
@@ -152,7 +160,6 @@ export default function MissionDetails() {
                 
                 {/* --- SIDEBAR --- */}
                 <div className="lg:col-span-4 space-y-6">
-                    {/* Destination Address Card */}
                     <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden group">
                         <MapIcon className="absolute -right-8 -bottom-8 text-white/5 group-hover:rotate-12 transition-transform duration-1000" size={200} />
                         <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-4">Adresse de Destination</p>
@@ -175,7 +182,6 @@ export default function MissionDetails() {
                         <SmallStat icon={<AlertTriangle size={18}/>} label="Alertes" value={mission.alertes.length} sub="Log système" color="red" />
                     </div>
 
-                    {/* Timeline */}
                     <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><Timer size={16}/></div>
@@ -208,6 +214,25 @@ export default function MissionDetails() {
                             <Polyline positions={trackPath} pathOptions={{ color: '#2563eb', weight: 5, opacity: 1, lineCap: 'round' }} />
                             <Circle center={destination} radius={mission.zone_rayon_m} pathOptions={{ color: '#103db9', fillColor: '#103db9', fillOpacity: 0.3, weight: 2, dashArray: '10, 10' }} />
 
+                            {/* NOUVEAU : Affichage des alertes sur la carte */}
+                            {mission.alertes.map(alerte => (
+                                <Marker 
+                                    key={`map-alert-${alerte.id}`} 
+                                    position={[alerte.latitude, alerte.longitude]} 
+                                    icon={incidentIcon}
+                                >
+                                    <Popup>
+                                        <div className="p-2 text-center min-w-[150px]">
+                                            <p className="font-black text-[9px] uppercase text-red-600 mb-1">Alerte Système</p>
+                                            <p className="text-xs font-bold text-slate-800">{alerte.message}</p>
+                                            <p className="text-[9px] text-slate-400 mt-2 font-mono">
+                                                {new Date(alerte.created_at).toLocaleString()}
+                                            </p>
+                                        </div>
+                                    </Popup>
+                                </Marker>
+                            ))}
+
                             <Marker position={destination} icon={destinationIcon}>
                                 <Popup>
                                     <div className="p-2 text-center">
@@ -231,7 +256,7 @@ export default function MissionDetails() {
                         </div>
                     </div>
 
-                    {/* Alerts Horizontal Slider */}
+                    {/* Alerts Journal */}
                     <div className="bg-white p-8 rounded-[2.5rem] border border-slate-50 shadow-sm">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-3">
@@ -246,7 +271,11 @@ export default function MissionDetails() {
                         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                             {mission.alertes.length > 0 ? (
                                 mission.alertes.map(alerte => (
-                                    <div key={alerte.id} className="min-w-[320px] p-6 bg-slate-50/50 border border-slate-100 rounded-[2rem] hover:border-red-200 transition-all group">
+                                    <div 
+                                        key={alerte.id} 
+                                        onClick={() => setMapFocus([alerte.latitude, alerte.longitude])} // Centrer au clic
+                                        className="min-w-[320px] p-6 bg-slate-50/50 border border-slate-100 rounded-[2rem] hover:border-red-200 transition-all group cursor-pointer"
+                                    >
                                         <div className="flex justify-between items-center mb-4">
                                             <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
                                             <span className="text-[10px] font-bold text-slate-400 uppercase">{new Date(alerte.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
@@ -267,7 +296,7 @@ export default function MissionDetails() {
     );
 }
 
-// --- HELPERS ---
+// --- HELPERS (SANS CHANGEMENTS) ---
 
 function StatusBadge({ status }) {
     const config = {
