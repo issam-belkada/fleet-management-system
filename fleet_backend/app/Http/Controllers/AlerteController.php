@@ -9,11 +9,7 @@ use Illuminate\Http\JsonResponse;
 
 class AlerteController extends Controller
 {
-    // -------------------------------------------------------
-    // GET /api/alertes
-    // Return all alertes with filters
-    // Used by : page 10 (liste alertes)
-    // -------------------------------------------------------
+
     public function index(Request $request): JsonResponse
     {
         $query = Alerte::query();
@@ -74,8 +70,7 @@ public function show($id)
 
     public function update(Alerte $alerte): JsonResponse
     {
-        // Use the acquitter() method we defined in the model
-        // it sets acquittee = true and records the timestamp
+
         $alerte->acquitter();
 
         return response()->json([
@@ -84,15 +79,10 @@ public function show($id)
         ]);
     }
 
-    // -------------------------------------------------------
-    // PUT /api/alertes/acquitter-toutes
-    // Acquit ALL non acquittees alertes at once
-    // Used by : page 10 "Tout marquer comme lu" button
-    // -------------------------------------------------------
+
     public function acquitterToutes(): JsonResponse
     {
-        // Update all non acquittees alertes in one query
-        // much faster than looping and calling acquitter()
+
         Alerte::nonAcquittees()->update([
             'acquittee'    => true,
             'acquittee_le' => now(),
@@ -103,7 +93,7 @@ public function show($id)
         ]);
     }
 
-    
+
     public function acquitter(Alerte $alerte): JsonResponse
     {
         $alerte->acquitter();
@@ -113,7 +103,7 @@ public function show($id)
             'alerte'  => $alerte,
         ]);
     }
-    
+
     public function count(): JsonResponse
     {
         $count = Alerte::nonAcquittees()->count();
@@ -123,7 +113,5 @@ public function show($id)
         ]);
     }
 
-    // Alertes are created automatically by GeofencingService
-    // the chef never creates or deletes them manually
-    // so store() and destroy() are not needed
+
 }

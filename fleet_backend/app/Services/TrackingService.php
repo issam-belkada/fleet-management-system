@@ -81,18 +81,18 @@ class TrackingService
             $mission->zone_lat, $mission->zone_lng
         );
 
-        // Seuil de tolérance : 10km (ajustable selon tes besoins)
-        return $distanceLigne > 50000;
+        // Seuil de tolérance : 25km (ajustable selon tes besoins)
+        return $distanceLigne > 25000;
     }
 
     /**
      * PILLIER 3 : IMMOBILITÉ
-     * Vérifie si le véhicule a parcouru moins de 50m sur les 10 derniers relevés.
+     * Vérifie si le véhicule a parcouru moins de 10m sur les 10 derniers relevés.
      */
     private function verifieImmobilite(Mission $mission): bool
     {
-        $recentes = $mission->positions()->orderByDesc('created_at')->take(10)->get();
-        if ($recentes->count() < 10) return false;
+        $recentes = $mission->positions()->orderByDesc('created_at')->take(50)->get();
+        if ($recentes->count() < 50) return false;
 
         $mouvementTotal = 0;
         for ($i = 0; $i < $recentes->count() - 1; $i++) {
@@ -102,7 +102,7 @@ class TrackingService
             );
         }
 
-        return $mouvementTotal < 50;
+        return $mouvementTotal < 10;
     }
 
     /**

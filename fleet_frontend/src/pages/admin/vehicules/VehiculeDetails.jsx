@@ -142,7 +142,6 @@ export default function VehiculeDetails() {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 
-                {/* STATS COL */}
                 <div className="space-y-6">
                     <div className="bg-slate-900 p-7 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
                         <Gauge className="absolute -right-6 -bottom-6 text-white/5" size={140} />
@@ -201,7 +200,7 @@ export default function VehiculeDetails() {
                                     )}
                                     <Marker position={lastPos} icon={currentPosIcon}>
                                         <Popup>
-                                            <div className="text-center p-1">
+                                            <div className="current-pos-marker">
                                                 <p className="font-black text-blue-600 text-lg">{data?.stats.derniere_vitesse} km/h</p>
                                                 <p className="text-[9px] text-slate-400 uppercase font-black tracking-tighter">
                                                     {data?.stats.is_historical ? "Dernière vue" : "Vitesse actuelle"}

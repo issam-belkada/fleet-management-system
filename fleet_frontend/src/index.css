@@ -23,5 +23,5 @@
 }
 
 .current-pos-marker {
-    transition: all 2s linear; /* Aligné sur ton sleep(2) de simulation */
+    transition: all 1s linear; /* Aligné sur ton sleep(2) de simulation */
 }
