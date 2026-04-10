@@ -59,11 +59,11 @@ npm run dev
 ```
 
 ## Simulation de test :
-**Simuler un trajet Alger -> Chlef (4000 points, 0.5s d'intervalle)**
+**Simuler un trajet -> Chlef (4000 points, 0.5s d'intervalle)**
 ```bash
 php artisan fleet:chlef {vehicle_id}
 ```
-**Simuler un trajet Alger -> Médéa (2000 points, détection de déviation)**
+**Simuler un trajet -> Médéa (2000 points, détection de déviation)**
 ```bash
 php artisan fleet:medea {vehicle_id}
 ```
