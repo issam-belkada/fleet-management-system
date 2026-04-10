@@ -23,7 +23,7 @@ Le projet ne se contente pas d'afficher des positions GPS ; il intègre un moteu
 - **Administration** : Gestion des chauffeurs, des véhicules et des affectations.
 
 ## 🛠 Stack Technique
-- **Backend** : Laravel 11 / 12, PHP 8.2+
+- **Backend** : Laravel 13 , PHP 8.2+
 - **Frontend** : React 18, Vite, Tailwind CSS, Lucide React
 - **Base de données** : PostgreSQL (avec support JSON pour les zones géographiques)
 - **Real-time** : Laravel Reverb (WebSockets)
@@ -36,21 +36,34 @@ Le projet ne se contente pas d'afficher des positions GPS ; il intègre un moteu
    git clone [https://github.com/issam-belkada/fleet-management-system.git](https://github.com/issam-belkada/fleet-management-system.git)
    cd fleet-management-system
 
-## Configuration Backend :
--composer install
--cp .env.example .env
--php artisan key:generate
--php artisan migrate --seed
-**Lancer le server** : php artisan serve
-**Lancer les WebSockets** : php artisan reverb:start
+## Configuration Backend : 
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+```
+**Lancer le server** : 
+```bash
+php artisan serve
+```
+**Lancer les WebSockets** : 
+```bash
+php artisan reverb:start
+```
 
 ## Configuration Frontend :
--npm install
--npm run dev
+```bash
+npm install
+npm run dev
+```
 
 ## Simulation de test :
-# Simuler un trajet Alger -> Chlef (4000 points, 0.5s d'intervalle)
+**Simuler un trajet Alger -> Chlef (4000 points, 0.5s d'intervalle)**
+```bash
 php artisan fleet:chlef {vehicle_id}
-
-# Simuler un trajet Alger -> Médéa (2000 points, détection de déviation)
+```
+**Simuler un trajet Alger -> Médéa (2000 points, détection de déviation)**
+```bash
 php artisan fleet:medea {vehicle_id}
+```
